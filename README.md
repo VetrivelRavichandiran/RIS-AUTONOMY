@@ -1,150 +1,746 @@
 # 📡 RIS-AUTONOMY
 
-**Deep reinforcement learning for adaptive Reconfigurable Intelligent Surface (RIS) phase optimization** in a millimeter-wave BS → RIS → UE MISO system.
+### Deep Reinforcement Learning for Autonomous Reconfigurable Intelligent Surface Optimization
 
-A PPO agent chooses the RIS phase vector every coherence interval to maximize a communication reward (sum rate + SINR + energy efficiency − phase-switching cost). The platform ships a complete, validated mmWave simulation engine, a PPO training pipeline, a five-controller benchmark, a nine-way parameter-sweep experiment engine, a visualization library, a Streamlit dashboard, and a 57-test suite.
+<p align="center">
 
-> **Every number the system reports comes from actual computation** — no placeholders, no TODOs, no mock ML.
+**Adaptive RIS Phase Control • mmWave Communications • PPO • MISO • Real-Time Optimization**
 
----
+[![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=for-the-badge\&logo=python\&logoColor=white)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-Deep_Learning-EE4C2C?style=for-the-badge\&logo=pytorch\&logoColor=white)](https://pytorch.org/)
+[![Gymnasium](https://img.shields.io/badge/Gymnasium-RL_Environment-0081A7?style=for-the-badge)](https://gymnasium.farama.org/)
+[![Stable Baselines3](https://img.shields.io/badge/Stable--Baselines3-PPO-2C3E50?style=for-the-badge)](https://stable-baselines3.readthedocs.io/)
+[![Tests](https://img.shields.io/badge/Tests-57_Passing-success?style=for-the-badge)](#-validation--reproducibility)
+[![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
-## ✨ Features
-
-- **Validated configuration** — single dataclass `Config` with YAML round-trip, precise `ConfigError` messages, and nested `clone_with_overrides` for sweeps.
-- **Physical channel model** — 3GPP UMa / free-space / log-distance path loss, Rician / Rayleigh fading, LOS or blocked direct link, configurable CSI error — all vectorized over (K users, M antennas, N RIS elements).
-- **Quantized RIS model** — `2^B`-level phase quantization, phase matrix, and switching-cost tracking.
-- **Gymnasium environment** — correct coherence semantics (act on the observed channel), continuous or per-element-discrete actions, `render`/`close`, normalized clipped observations.
-- **PPO training** — Stable-Baselines3 with a real `BestModelCallback` (saves only when strictly better), per-episode metrics CSV, checkpoints, and `training_stats.json`.
-- **Genuinely distinct baselines** — no-RIS, random-RIS, sum-rate **greedy** coordinate descent, and **alternating per-user** conventional optimization.
-- **Evaluation & benchmarking** — per-step metrics (rate, SINR, EE, BER, outage, Jain fairness, inference latency) and a fair five-controller comparison on identical channel seeds.
-- **Experiment engine** — nine sweeps (SNR, RIS size, phase bits, user count, velocity, CSI error, power, distance, fading) plus a generalization (train-vs-test gap) experiment; each writes CSV/JSON + a real plot.
-- **Visualization** — topology, phase grid/histogram, spatial heatmaps, training curves, and all sweep/comparison/CDF/latency plots (matplotlib + optional plotly HTML).
-- **Streamlit dashboard** — configure a scenario, inspect topology/phases, train, evaluate, benchmark, and sweep from one page.
-- **Determinism** — fixed-seed runs are byte-for-byte reproducible (verified by diffing two independent runs).
+</p>
 
 ---
 
-## 🏗️ System Model
+## ⚡ What is RIS-AUTONOMY?
 
+**RIS-AUTONOMY** is a research-grade deep reinforcement learning platform for **autonomous phase optimization of Reconfigurable Intelligent Surfaces (RIS)** in **millimeter-wave BS → RIS → UE MISO communication systems**.
+
+Instead of relying on static or manually engineered RIS configurations, a **Proximal Policy Optimization (PPO)** agent continuously observes the wireless channel and learns how to configure the RIS phase vector during every channel coherence interval.
+
+### 🎯 Core Objective
+
+> **Learn the RIS configuration that maximizes communication performance while balancing throughput, SINR, energy efficiency, fairness, and phase-switching cost.**
+
+```text
+Wireless Environment
+        ↓
+Channel State Observation
+        ↓
+┌─────────────────────────┐
+│   PPO Decision Engine   │
+│                         │
+│ Channel + SINR + Rate   │
+│ CSI + Mobility + Phase  │
+└────────────┬────────────┘
+             ↓
+      RIS Phase Vector
+             ↓
+      mmWave Channel
+             ↓
+   Rate / SINR / EE / BER
+             ↓
+        Reward Signal
+             ↺
 ```
-        M antennas              N = R×C elements
-  ┌──────────────┐  h_BR   ┌──────────────────┐  h_RU   ┌─────┐
-  │   Base       │ ───────▶│   Reconfigurable │ ───────▶│  UE │
-  │   Station    │         │   Intelligent    │         │     │
-  │  (MISO MRT)  │ ─ ─ ─ ─ ─  Surface (RIS)   │         │     │
-  └──────────────┘  h_BU (LOS or blocked) ────┴─────────┴─────┘
-```
-
-The PPO agent observes a normalized channel/state vector (magnitudes, phases, SINR, rate, positions, velocities, current/previous phases, CSI quality, interference) and outputs the RIS phase vector. The reward combines sum rate, SINR, and energy efficiency, penalized by phase-switching cost.
 
 ---
 
-## 🚀 Quick Start
+# 🚀 Why This Project Is Different
 
-Requires **Python ≥ 3.11**.
+RIS research often stops at a mathematical formulation or isolated optimization experiment.
+
+**RIS-AUTONOMY is built as an end-to-end executable research platform.**
+
+It integrates:
+
+* 🧠 Deep Reinforcement Learning
+* 📡 Physics-based wireless channel simulation
+* 🔄 Dynamic RIS phase control
+* 📊 Multiple optimization baselines
+* 🧪 Automated experiment sweeps
+* 📈 Research-grade visualization
+* 🖥️ Interactive Streamlit dashboard
+* 🔬 Reproducible experiments
+* ✅ Automated validation
+* 📦 Complete CLI-based workflow
+
+> **Every reported metric is generated by actual computation — no placeholder results, mock ML pipelines, or TODO-based functionality.**
+
+---
+
+# 🧠 Intelligent RIS Control
+
+The PPO agent receives a normalized representation of the wireless environment containing information such as:
+
+```text
+Channel Magnitudes
+Channel Phases
+SINR
+Achieved Rate
+User Positions
+User Velocities
+Current RIS Configuration
+Previous RIS Configuration
+CSI Quality
+Interference
+```
+
+The agent then produces:
+
+```text
+        State
+          │
+          ▼
+   ┌───────────────┐
+   │   PPO Agent   │
+   └───────┬───────┘
+           │
+           ▼
+   RIS Phase Vector
+           │
+           ▼
+   Wireless Channel
+           │
+           ▼
+ ┌───────────────────────┐
+ │ Rate / SINR / EE / BER│
+ └───────────┬───────────┘
+             │
+             ▼
+          Reward
+             │
+             └──────────────► PPO
+```
+
+The reward function combines:
+
+**Sum Rate + SINR + Energy Efficiency − Phase Switching Cost**
+
+This encourages the controller to optimize communication performance while avoiding unnecessary RIS reconfiguration.
+
+---
+
+# 📡 System Model
+
+```text
+                         h_BR
+              ┌────────────────────────┐
+              │                        ▼
+      ┌──────────────┐        ┌──────────────────┐
+      │              │        │                  │
+      │  Base Station│ ─────► │       RIS        │
+      │     MISO     │        │   R × C Elements │
+      │              │        │                  │
+      └──────┬───────┘        └────────┬─────────┘
+             │                         │
+             │ h_BU                    │ h_RU
+             │                         │
+             └──────────────┬──────────┘
+                            ▼
+                     ┌────────────┐
+                     │     UE     │
+                     │  K Users   │
+                     └────────────┘
+```
+
+### Supported Communication Model
+
+| Component    | Capability                           |
+| ------------ | ------------------------------------ |
+| Base Station | Multi-antenna MISO                   |
+| RIS          | Configurable N-element surface       |
+| Frequency    | mmWave                               |
+| Propagation  | 3GPP UMa / Free-Space / Log-Distance |
+| Fading       | Rician / Rayleigh                    |
+| Direct Link  | LOS / Blocked                        |
+| CSI          | Perfect / configurable error         |
+| RIS Phase    | Quantized `2^B` levels               |
+| Mobility     | Configurable user velocity           |
+| Beamforming  | MRT                                  |
+| RL           | PPO                                  |
+| Environment  | Gymnasium                            |
+
+---
+
+# ✨ Feature Matrix
+
+## 📡 Physics & Channel Modeling
+
+* 3GPP UMa path-loss model
+* Free-space propagation
+* Log-distance path-loss
+* Rician fading
+* Rayleigh fading
+* LOS / blocked direct link
+* Configurable CSI errors
+* Vectorized channel generation
+* Multi-user and multi-antenna support
+
+## 🔄 RIS Modeling
+
+* Arbitrary RIS dimensions
+* `2^B` phase quantization
+* Phase matrix generation
+* Configurable phase resolution
+* Phase-switching cost
+* Dynamic phase control
+* Per-element action support
+
+## 🧠 Reinforcement Learning
+
+* Stable-Baselines3 PPO
+* Custom Gymnasium environment
+* Continuous actions
+* Per-element discrete actions
+* Normalized observations
+* Clipped observations
+* Custom reward design
+* Best-model checkpointing
+* Training metrics
+* Reproducible seeds
+
+## 📊 Communication Metrics
+
+The evaluation engine measures:
+
+```text
+┌───────────────────────┐
+│ Sum Rate              │
+│ SINR                  │
+│ Energy Efficiency     │
+│ BER                   │
+│ Outage Probability    │
+│ Jain Fairness         │
+│ Inference Latency     │
+└───────────────────────┘
+```
+
+---
+
+# 🏆 Multi-Controller Benchmark
+
+RIS-AUTONOMY evaluates the learned controller against **five distinct strategies** under identical channel seeds:
+
+| Controller     | Description                                    |
+| -------------- | ---------------------------------------------- |
+| `no_ris`       | Communication without RIS                      |
+| `random_ris`   | Random RIS phase configuration                 |
+| `greedy`       | Sum-rate greedy coordinate descent             |
+| `conventional` | Alternating per-user conventional optimization |
+| `DRL (PPO)`    | Learned adaptive RIS controller                |
+
+This provides a consistent experimental framework for studying the behavior of learning-based RIS control against conventional strategies.
+
+---
+
+# 📊 Example Benchmark
+
+### CPU Quick-Test Scenario
+
+| Controller    |   Sum Rate |  SINR (dB) |         EE |  Fairness |
+| ------------- | ---------: | ---------: | ---------: | --------: |
+| No RIS        |     2889.9 |     -52.76 |     2675.9 |     0.806 |
+| Random RIS    |     3688.0 |     -51.66 |     3414.8 |     0.758 |
+| Greedy        |     8071.4 |     -49.23 |     7473.5 |     0.671 |
+| Conventional  |     4632.3 |     -49.61 |     4289.1 |     0.799 |
+| **DRL (PPO)** | **3727.3** | **-51.61** | **3451.2** | **0.756** |
+
+These values correspond to the included CPU quick-test configuration and demonstrate how the framework reports performance across different controllers.
+
+The benchmark also records **inference latency**, enabling the study of the trade-off between optimization quality and controller execution cost.
+
+---
+
+# 🧪 Automated Experiment Engine
+
+RIS-AUTONOMY includes an experiment engine designed for systematic research evaluation.
+
+### Parameter Sweeps
+
+```text
+SNR
+ │
+ ├── RIS Size
+ │
+ ├── Phase Resolution
+ │
+ ├── Number of Users
+ │
+ ├── User Velocity
+ │
+ ├── CSI Error
+ │
+ ├── Transmit Power
+ │
+ ├── BS/RIS/UE Distance
+ │
+ └── Fading Model
+```
+
+### Generalization Experiment
+
+The framework also supports:
+
+```text
+Training Environment
+        │
+        ▼
+   PPO Learning
+        │
+        ▼
+   Trained Policy
+        │
+        ▼
+Different Test Environment
+        │
+        ▼
+ Generalization Gap
+```
+
+Every experiment generates machine-readable outputs such as:
+
+```text
+CSV
+JSON
+PNG
+HTML
+```
+
+---
+
+# 🔬 Reproducibility First
+
+Research results are only useful when they can be reproduced.
+
+RIS-AUTONOMY uses deterministic seed management across experiments and stores the configuration used for every run.
+
+Each execution generates a dedicated directory:
+
+```text
+results/
+└── 2026-09-20_XXXXXX/
+    ├── config.yaml
+    ├── run_manifest.json
+    ├── metrics/
+    ├── models/
+    ├── plots/
+    └── logs/
+```
+
+The manifest records:
+
+```text
+Configuration
+Random Seed
+Software Versions
+Experiment Parameters
+Model Information
+```
+
+### ✅ Validation
+
+The project currently contains:
+
+**57 automated tests across 8 test modules**
+
+including validation of:
+
+* Configuration
+* Channel generation
+* RIS behavior
+* Communication calculations
+* Environment semantics
+* Training pipeline
+* Evaluation
+* Reproducibility
+
+---
+
+# 📈 Visualization Suite
+
+Built-in visualization tools support:
+
+```text
+📡 System Topology
+🟦 RIS Phase Maps
+📊 Phase Histograms
+🔥 Spatial Heatmaps
+📈 Training Curves
+📉 Parameter Sweeps
+📊 Controller Comparisons
+📈 CDF Analysis
+⚡ Inference Latency
+```
+
+Matplotlib is supported by default, with optional Plotly HTML visualization.
+
+---
+
+# 🖥️ Interactive Dashboard
+
+A complete **Streamlit research dashboard** allows users to interact with the entire pipeline.
+
+```text
+┌─────────────────────────────────────────────┐
+│              RIS-AUTONOMY                   │
+├─────────────────────────────────────────────┤
+│                                             │
+│  ⚙ Scenario Configuration                   │
+│                                             │
+│  📡 System Topology                          │
+│                                             │
+│  🔵 RIS Phase Visualization                  │
+│                                             │
+│  🧠 Train PPO                               │
+│                                             │
+│  📊 Evaluate Model                          │
+│                                             │
+│  🏆 Benchmark Controllers                   │
+│                                             │
+│  🧪 Run Parameter Sweeps                    │
+│                                             │
+└─────────────────────────────────────────────┘
+```
+
+Launch it with:
 
 ```bash
-cd RIS-AUTONOMY
-python3 -m venv .venv
-# Linux/macOS
-.venv/bin/pip install -e .
-# Windows (PowerShell)
-.venv\Scripts\pip install -e .
-
-# Verify the install (57 tests)
-python -m pytest tests/ -q
-
-# Train a small agent
-python scripts/train.py --config configs/quick_test.yaml --timesteps 5000 --seed 42
-
-# Evaluate the best model
-python scripts/evaluate.py \
-    --model results/<train-run>/models/final/best_model.zip \
-    --config configs/quick_test.yaml --episodes 3
-
-# Five-controller benchmark
-python scripts/benchmark.py --config configs/quick_test.yaml
-
-# Launch the Streamlit dashboard
 python -m ris_autonomy.cli dashboard
 ```
 
-On a CPU-only machine the CPU build of PyTorch is used automatically.
-
 ---
 
-## 🖥️ CLI
+# ⚡ Quick Start
 
-All subcommands (and their `scripts/` wrappers) accept `--config`, `--output-dir`, and `--seed`.
+### 1. Clone
 
-| Command | Purpose | Key flags |
-|---------|---------|-----------|
-| `train` | Train a PPO agent | `--timesteps`, `--device`, `--config` |
-| `evaluate` | Evaluate a trained model | `--model`, `--episodes`, `--stochastic` |
-| `benchmark` | Five-controller comparison | `--config` |
-| `experiment` | Run a named sweep / generalization | `--name`, `--model`, `--episodes` |
-| `generate-channels` | Batch-generate channel realizations | `--num`, `--out` |
-| `reproduce` | Re-run a saved run from its manifest | `--run-dir` |
-| `dashboard` | Launch the Streamlit dashboard | — |
-
-Every command creates a **timestamped run directory** under `results/` containing `config.yaml`, `run_manifest.json` (config + seed + versions), metrics, models, and plots — previous runs are never overwritten.
-
-### Example results (CPU, quick-test scenario)
-
-Five-controller benchmark on identical channel seeds:
-
-| Controller   | Sum rate | SINR (dB) | EE      | Fairness |
-|--------------|---------:|----------:|--------:|---------:|
-| no_ris       | 2889.9   | −52.76    | 2675.9  | 0.806    |
-| random_ris   | 3688.0   | −51.66    | 3414.8  | 0.758    |
-| greedy       | 8071.4   | −49.23    | 7473.5  | 0.671    |
-| conventional | 4632.3   | −49.61    | 4289.1  | 0.799    |
-| **DRL (PPO)**| 3727.3   | −51.61    | 3451.2  | 0.756    |
-
-The DRL agent beats conventional and random-RIS, is competitive with greedy on rate, and preserves user fairness (0.756 vs greedy's 0.671) — while incurring only ~0.4 ms inference latency. The SNR sweep shows outage dropping to 0.0 at high received SINR; the CSI-error sweep shows rate degrading gracefully as channel knowledge worsens.
-
----
-
-## 📁 Repository Layout
-
+```bash
+git clone https://github.com/VetrivelRavichandiran/RIS-AUTONOMY.git
+cd RIS-AUTONOMY
 ```
+
+### 2. Create Environment
+
+```bash
+python -m venv .venv
+```
+
+### Windows
+
+```powershell
+.venv\Scripts\activate
+.venv\Scripts\pip install -e .
+```
+
+### Linux / macOS
+
+```bash
+source .venv/bin/activate
+pip install -e .
+```
+
+### 3. Validate Installation
+
+```bash
+python -m pytest tests/ -q
+```
+
+### 4. Train PPO
+
+```bash
+python scripts/train.py \
+    --config configs/quick_test.yaml \
+    --timesteps 5000 \
+    --seed 42
+```
+
+### 5. Evaluate
+
+```bash
+python scripts/evaluate.py \
+    --model results/<train-run>/models/final/best_model.zip \
+    --config configs/quick_test.yaml \
+    --episodes 3
+```
+
+### 6. Benchmark
+
+```bash
+python scripts/benchmark.py \
+    --config configs/quick_test.yaml
+```
+
+### 7. Launch Dashboard
+
+```bash
+python -m ris_autonomy.cli dashboard
+```
+
+---
+
+# 🛠️ Command-Line Interface
+
+| Command             | Purpose                       | Important Flags                         |
+| ------------------- | ----------------------------- | --------------------------------------- |
+| `train`             | Train PPO agent               | `--timesteps`, `--device`, `--config`   |
+| `evaluate`          | Evaluate trained model        | `--model`, `--episodes`, `--stochastic` |
+| `benchmark`         | Compare controllers           | `--config`                              |
+| `experiment`        | Run experiments               | `--name`, `--model`, `--episodes`       |
+| `generate-channels` | Generate channel realizations | `--num`, `--out`                        |
+| `reproduce`         | Reproduce saved run           | `--run-dir`                             |
+| `dashboard`         | Launch dashboard              | —                                       |
+
+All major commands support:
+
+```text
+--config
+--output-dir
+--seed
+```
+
+Previous experiments are preserved rather than overwritten.
+
+---
+
+# 📁 Project Architecture
+
+```text
 RIS-AUTONOMY/
-├── configs/                 # 6 validated scenario configs
-├── app/dashboard.py         # Streamlit dashboard
-├── scripts/                 # thin CLI wrappers (train/evaluate/benchmark/…)
-├── src/ris_autonomy/
-│   ├── config.py            # validated dataclass config + YAML
-│   ├── cli.py               # argparse subcommands
-│   ├── channels/            # pathloss, fading, channel generator
-│   ├── ris/                 # quantization, surface, phase controller
-│   ├── communications/      # signal model, SINR, rate, BER, EE
-│   ├── environment/         # Gymnasium env, state builder, mobility
-│   ├── rl/                  # agent, policies, rewards, callbacks, training
-│   ├── baselines/           # no_ris, random, greedy, conventional
-│   ├── evaluation/          # evaluator, benchmark, experiments, metrics
-│   ├── visualization/       # topology, phase map, heatmaps, plots, io
-│   └── utils/               # seeding, logging, io
-├── tests/                   # 57 tests across 8 modules
-├── docs/                    # architecture, configuration, user guide
-├── data/                    # raw / processed / results (gitkeep)
-└── models/                  # checkpoints / final (gitkeep)
+│
+├── configs/
+│   └── scenario configurations
+│
+├── app/
+│   └── dashboard.py
+│
+├── scripts/
+│   ├── train.py
+│   ├── evaluate.py
+│   ├── benchmark.py
+│   └── ...
+│
+├── src/
+│   └── ris_autonomy/
+│       │
+│       ├── config.py
+│       ├── cli.py
+│       │
+│       ├── channels/
+│       │   ├── pathloss
+│       │   ├── fading
+│       │   └── channel_generator
+│       │
+│       ├── ris/
+│       │   ├── quantization
+│       │   ├── surface
+│       │   └── phase_controller
+│       │
+│       ├── communications/
+│       │   ├── signal_model
+│       │   ├── SINR
+│       │   ├── rate
+│       │   ├── BER
+│       │   └── energy_efficiency
+│       │
+│       ├── environment/
+│       │   ├── Gymnasium environment
+│       │   ├── state builder
+│       │   └── mobility
+│       │
+│       ├── rl/
+│       │   ├── PPO agent
+│       │   ├── policies
+│       │   ├── rewards
+│       │   └── callbacks
+│       │
+│       ├── baselines/
+│       │   ├── no_ris
+│       │   ├── random
+│       │   ├── greedy
+│       │   └── conventional
+│       │
+│       ├── evaluation/
+│       │   ├── evaluator
+│       │   ├── benchmark
+│       │   └── experiments
+│       │
+│       ├── visualization/
+│       │   ├── topology
+│       │   ├── phase maps
+│       │   ├── heatmaps
+│       │   └── plots
+│       │
+│       └── utils/
+│           ├── seeding
+│           ├── logging
+│           └── IO
+│
+├── tests/
+│
+├── docs/
+│   ├── architecture.md
+│   ├── configuration.md
+│   └── user_guide.md
+│
+├── data/
+├── models/
+├── BUILD_REPORT.md
+├── requirements.txt
+└── LICENSE
 ```
 
 ---
 
-## 📖 Documentation
+# 📚 Documentation
 
-- **[docs/architecture.md](docs/architecture.md)** — module reference, data flow, and exact tensor dimensions.
-- **[docs/configuration.md](docs/configuration.md)** — every config key with types, defaults, and constraints.
-- **[docs/user_guide.md](docs/user_guide.md)** — installation, CLI, run-directory layout, Python API, troubleshooting.
-- **[BUILD_REPORT.md](BUILD_REPORT.md)** — what was built, acceptance outputs, and determinism verification.
+| Document                               | Description                                            |
+| -------------------------------------- | ------------------------------------------------------ |
+| [Architecture](docs/architecture.md)   | System architecture, modules and tensor dimensions     |
+| [Configuration](docs/configuration.md) | Configuration parameters, defaults and constraints     |
+| [User Guide](docs/user_guide.md)       | Installation, CLI, Python API and troubleshooting      |
+| [Build Report](BUILD_REPORT.md)        | Implementation details, validation and reproducibility |
 
 ---
 
-## 🧪 Requirements
+# 🔧 Requirements
 
-Python ≥ 3.11. Dependencies (see `requirements.txt`): numpy, scipy, torch, gymnasium, stable-baselines3, pyyaml, pandas, matplotlib, streamlit, plotly, pyarrow, tensorboard, pytest.
+```text
+Python >= 3.11
+```
 
-## 📄 License
+Core dependencies:
 
-MIT — see [LICENSE](LICENSE).
+```text
+NumPy
+SciPy
+PyTorch
+Gymnasium
+Stable-Baselines3
+PyYAML
+Pandas
+Matplotlib
+Streamlit
+Plotly
+PyArrow
+TensorBoard
+PyTest
+```
+
+CPU-only systems are supported.
+
+---
+
+# 🔭 Research Directions
+
+RIS-AUTONOMY provides a foundation for extending intelligent wireless control toward:
+
+* Multi-agent RIS optimization
+* Multi-RIS networks
+* Massive MIMO
+* 6G intelligent surfaces
+* Joint beamforming + RIS optimization
+* Federated reinforcement learning
+* Multi-objective wireless optimization
+* Mobility-aware RIS control
+* Imperfect CSI environments
+* Hardware-aware phase optimization
+* Edge deployment of learned controllers
+* Digital-twin-based wireless optimization
+
+---
+
+# 🧩 Research Pipeline
+
+```text
+                 ┌──────────────────┐
+                 │  Scenario Config │
+                 └────────┬─────────┘
+                          │
+                          ▼
+                 ┌──────────────────┐
+                 │ Channel Generator│
+                 └────────┬─────────┘
+                          │
+                          ▼
+                 ┌──────────────────┐
+                 │ Gymnasium Env    │
+                 └────────┬─────────┘
+                          │
+                          ▼
+                 ┌──────────────────┐
+                 │   PPO Training   │
+                 └────────┬─────────┘
+                          │
+                          ▼
+              ┌─────────────────────────┐
+              │     Model Evaluation    │
+              └────────────┬────────────┘
+                           │
+             ┌─────────────┼─────────────┐
+             ▼             ▼             ▼
+        Benchmark       Sweeps      Generalization
+             │             │             │
+             └─────────────┼─────────────┘
+                           ▼
+                  ┌─────────────────┐
+                  │ Research Plots  │
+                  │ CSV / JSON Data │
+                  └─────────────────┘
+```
+
+---
+
+# 📌 Project Highlights
+
+| Capability                        | Status |
+| --------------------------------- | :----: |
+| mmWave channel simulation         |    ✅   |
+| RIS phase quantization            |    ✅   |
+| PPO controller                    |    ✅   |
+| Gymnasium environment             |    ✅   |
+| Multiple baselines                |    ✅   |
+| Automated benchmarking            |    ✅   |
+| Parameter sweeps                  |    ✅   |
+| Generalization testing            |    ✅   |
+| Visualization framework           |    ✅   |
+| Streamlit dashboard               |    ✅   |
+| Deterministic execution           |    ✅   |
+| Automated test suite              |    ✅   |
+| Reproducible experiment manifests |    ✅   |
+
+---
+
+# 👨‍💻 Author
+
+### **Vetrivel Ravichandiran**
+
+Engineering • Artificial Intelligence • Wireless Communications • Reinforcement Learning
+
+🔗 **GitHub:**
+https://github.com/VetrivelRavichandiran
+
+---
+
+# 📜 License
+
+Released under the **MIT License**.
+
+See [LICENSE](LICENSE) for details.
+
+---
+
+<p align="center">
+
+### 📡 RIS-AUTONOMY
+
+**Learning to control the wireless environment.**
+
+**From channel state → intelligent decision → adaptive RIS configuration.**
+
+</p>
