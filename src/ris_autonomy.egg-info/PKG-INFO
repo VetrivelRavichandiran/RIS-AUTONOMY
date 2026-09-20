@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: ris-autonomy
+Version: 0.1.0
+Requires-Python: >=3.11
+License-File: LICENSE
+Requires-Dist: numpy>=2
+Requires-Dist: scipy>=1.17
+Requires-Dist: gymnasium>=1.3
+Requires-Dist: stable-baselines3>=2.9
+Requires-Dist: pyyaml>=6
+Requires-Dist: pandas>=3
+Requires-Dist: matplotlib>=3
+Requires-Dist: streamlit>=1.64
+Requires-Dist: plotly>=7
+Requires-Dist: pyarrow>=15
+Requires-Dist: tensorboard>=2
+Dynamic: license-file

@@ -1,0 +1,38 @@
+# RIS-AUTONOMY single-user scenario (default geometry, 1 user)
+system:
+  carrier_frequency_hz: 28000000000.0
+  bandwidth_hz: 100000000.0
+  transmit_power_dbm: 30
+  noise_figure_db: 5
+  modulation: qpsk
+  ris_element_power_w: 0.005
+  bs_circuit_power_w: 0.0
+bs:
+  antennas: 4
+ris:
+  rows: 8
+  columns: 8
+  phase_bits: 2
+  amplitude: 1.0
+  switching_cost: 0.1
+users:
+  count: 1
+  mobility: static
+  velocity_mps: 2.0
+scenario:
+  boundary_width_m: 100
+  boundary_height_m: 100
+  bs_position: [0.0, 0.0]
+  ris_position: [50.0, 50.0]
+  ue_region: [10.0, 10.0, 90.0, 90.0]
+channel:
+  model: 3gpp_um
+  fading: rician
+  rician_k_db: 10.0
+  pathloss_exponent: 2.5
+  csi_error: 0.0
+  direct_link: blocked
+  blockage_db: 40.0
+rl:
+  timesteps: 100000
+  n_steps_per_episode: 100
